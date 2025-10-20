@@ -83,9 +83,14 @@ function ActualCommand(props: { rerender: () => void }) {
   const [data, setData] = useState<{ a: string[]; loading: boolean }>({ a: [], loading: true }); // Response
   const [err404, set404] = useState<[string, Error][] | false>(false);
   const history = useRef<[string, string][]>([]); // Calculation history
+  //console.log(data);
 
   function onQalcData(data: Buffer) {
-    const parsedLines = processMsg(data.toString("utf-8"));
+    const rawData = data.toString("utf-8");
+    if (rawData === "\x1B[0J") return;
+    //console.log("Dataa: %s", rawData);
+    const parsedLines = processMsg(rawData);
+    //console.log("Lines: %s", parsedLines);
     const lastLine = parsedLines[parsedLines.length - 1];
     if (lastLine && history.current.length)
       if (history.current[0][1] === historyAnsPlaceholder) history.current[0][1] = lastLine; // Fill history ans
@@ -121,6 +126,7 @@ function ActualCommand(props: { rerender: () => void }) {
   useEffect(() => {
     // Interactive input
     if (qalcProcess?.stdin?.writable) {
+      //console.log("Writing %s", searchText);
       if (searchText.length > prevSearchText.length && searchText.startsWith(prevSearchText))
         qalcProcess.stdin.write(searchText.slice(prevSearchText.length));
       else if (searchText.length < prevSearchText.length && prevSearchText.startsWith(searchText))
